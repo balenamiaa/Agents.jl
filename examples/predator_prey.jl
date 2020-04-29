@@ -199,41 +199,29 @@ Random.seed!(23182) # hide
 n_steps = 500
 model = initialize_model()
 
-# To view our starting population, we can build an overview plot:
+using AgentsPlots
 
-sheep(a) = typeof(a) == Sheep
-wolves(a) = typeof(a) == Wolf
-grass(a) = typeof(a) == Grass && a.fully_grown
-allgrass(a) = typeof(a) == Grass
+pyplot() # hide
 
-grass_pos = [a.pos for a in allagents(model) if allgrass(a)]
-grass_color = [a.countdown / a.regrowth_time for a in allagents(model) if allgrass(a)]
-scatter(
-    grass_pos,
-    label = "Grass",
-    marker = (:square, 10),
-    color = cgrad([:brown, :green]),
-    marker_z = grass_color,
+mshape(a) = a isa Grass ? :square : a isa Wolf ? :utriangle : :circle
+offset(a) = a isa Grass ? (0.0, 0.0) : a isa Wolf ? (-0.2, 0.0) : (0.1, 0.1)
+mcolor(a::Sheep) = RGBA(1.0, 1.0, 1.0, 0.8)
+mcolor(a::Wolf) = RGBA(0.6, 0.6, 0.6, 0.8)
+mcolor(a::Grass) = cgrad([:brown, :green])[a.countdown / a.regrowth_time]
+plotabm(
+    model;
+    offset = offset,
+    am = mshape,
+    as = 12,
+    ac = mcolor,
+    scheduler = by_type((Grass,Sheep,Wolf),false),
+    grid = false,
     size = (800, 600),
     showaxis = false,
     aspect_ratio = :equal,
-    grid = false,
 )
-sheep_shape = Shape(:circle)
-sheep_shape.x .+= 0.5
-scatter!(
-    [a.pos for a in allagents(model) if sheep(a)],
-    marker = (sheep_shape, 13, 0.7, :white),
-    label = "Sheep",
-)
-wolf_shape = Shape(:utriangle)
-wolf_shape.x .-= 0.5
-wolf_shape.y .-= 0.2
-scatter!(
-    [a.pos for a in allagents(model) if wolves(a)],
-    marker = (wolf_shape, 15, 0.9, :gray),
-    label = "Wolves",
-)
+
+# %% #src
 
 # Now, lets run the simulation and collect some data.
 
